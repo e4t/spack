@@ -61,6 +61,7 @@ import spack.schema.modules
 import spack.schema.packages
 import spack.schema.repos
 import spack.schema.upstreams
+import spack.schema.system
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
@@ -77,7 +78,8 @@ section_schemas = {
     'modules': spack.schema.modules.schema,
     'config': spack.schema.config.schema,
     'upstreams': spack.schema.upstreams.schema,
-    'bootstrap': spack.schema.bootstrap.schema
+    'bootstrap': spack.schema.bootstrap.schema,
+    'system': spack.schema.system.schema
 }
 
 # Same as above, but including keys for environments

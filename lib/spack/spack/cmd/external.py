@@ -43,6 +43,10 @@ def setup_parser(subparser):
         '--all', action='store_true',
         help="search for all packages that Spack knows about"
     )
+    find_parser.add_argument(
+        '--system', action='store_true',
+        help="search for system packages listed in system.yaml"
+    )
     spack.cmd.common.arguments.add_common_arguments(find_parser, ['tags'])
     find_parser.add_argument('packages', nargs=argparse.REMAINDER)
     find_parser.epilog = (
@@ -85,6 +89,31 @@ def external_find(args):
             spack.repo.path.packages_with_tags(tag)
         ]
         packages_to_check = list(set(packages_to_check))
+
+    def filter_syspackages(package_list):
+        system = spack.config.get('system')
+        filtered_packages = []
+        exclude_pkgs = system.get('exclude', [])
+        if exclude_pkgs:
+            for pkg in package_list:
+                if not pkg.name in exclude_pkgs:
+                    filtered_packages.append(pkg)
+        else:
+            include_pkgs = system.get('include', [])
+            if include_pkgs:
+                for pkg in package_list:
+                    if pkg.name in include_pkgs:
+                        filtered_packages.append(pkg)
+        return filtered_packages
+
+    if args.system:
+        if packages_to_check:
+            packages_to_check = filter_syspackages(packages_to_check)
+        else:
+            packages_to_check = filter_syspackages(spack.repo.path.all_packages())
+        if not packages_to_check:
+            tty.msg('No system packages found')
+            return
 
     # If the list of packages is empty, search for every possible package
     if not args.tags and not packages_to_check:
