@@ -180,6 +180,50 @@ def test_find_external_merge(mutable_config, mutable_mock_repo):
             'prefix': '/x/y2/'} in pkg_externals
 
 
+def test_find_external_cmd_system_include(mock_executable,mutable_config):
+    """Check that 'spack find external --system' only finds content
+       listed in the 'include' section of system.yaml.
+    """
+    system_include = { 'include': [ 'cmake', 'autoconf' ] }
+    exe=mock_executable("cmake", output='echo "cmake version 1.foo"')
+    mock_executable("automake", output='echo "automake (GNU automake) 3.foobar"')
+    mock_executable("autoconf", output='echo "autoconf (GNU Autoconf) 2.bar"')
+    mutable_config.update_config('system', system_include)
+
+    prefix=os.path.dirname(exe)
+    os.environ['PATH'] = ':'.join([prefix])
+    prefix=os.path.dirname(prefix)
+
+    external('find', '--all', '--system')
+    pkgs_cfg = spack.config.get('packages')
+
+    assert {'spec': 'cmake@1.foo', 'prefix': prefix} in pkgs_cfg['cmake']['externals']
+    assert {'spec': 'autoconf@2.bar', 'prefix': prefix } in pkgs_cfg['autoconf']['externals']
+    assert 'automake' not in pkgs_cfg.keys()
+
+
+def test_find_external_cmd_system_exclude(mock_executable,mutable_config):
+    """Check that 'spack find external --system' only finds content
+       not listed in the 'exclude' section of system.yaml.
+    """
+    system_exclude = { 'exclude': [ 'cmake', 'autoconf' ] }
+    exe=mock_executable("cmake", output='echo "cmake version 1.foo"')
+    mock_executable("automake", output='echo "automake (GNU automake) 3.foobar"')
+    mock_executable("autoconf", output='echo "autoconf (GNU Autoconf) 2.bar"')
+    mutable_config.update_config('system', system_exclude)
+
+    prefix=os.path.dirname(exe)
+    os.environ['PATH'] = ':'.join([prefix])
+    prefix=os.path.dirname(prefix)
+
+    external('find', '--all', '--system')
+    pkgs_cfg = spack.config.get('packages')
+
+    assert 'cmake' not in pkgs_cfg.keys()
+    assert 'autoconf' not in pkgs_cfg.keys()
+    assert { 'spec': 'automake@3.foobar', 'prefix': prefix} in pkgs_cfg['automake']['externals']
+
+
 def test_list_detectable_packages(mutable_config, mutable_mock_repo):
     external("list")
     assert external.returncode == 0
