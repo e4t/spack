@@ -209,6 +209,43 @@ Specific limitations include:
   then Spack will not add a new external entry (``spack config blame packages``
   can help locate all external entries).
 
+.. _limit-package-search:
+
+"""""""""""""""""""""""""""""
+Limit Packages to be Searched
+"""""""""""""""""""""""""""""
+
+You may want to limit the set of packages to be searched - either by
+blacklisting certain packages so they will not be added to the packages file
+or by explicitly list those packages that you would like to reuse from the
+system in case they are installed.
+This can be achieved by explcitly listing packages in the ``system.yaml``
+file. You may either provide a list of packages to explicity exclude when
+searching for external packages:
+
+.. code-block:: yaml
+
+   system:
+     exclude:
+       - cmake
+       - autoconf
+       - automake
+
+or by explicitly specifying packages that are searchable:
+
+.. code-block:: yaml
+
+   system:
+     include:
+       - cmake
+       - autoconf
+       - automake
+
+In this case, only the packages listed are considered for searching (after
+applying all other restrictions).
+To apply these limitations, use the ``--system`` option with
+:ref:`spack external find <spack-external-find>`.
+
 .. _concretizer-options:
 
 ----------------------
